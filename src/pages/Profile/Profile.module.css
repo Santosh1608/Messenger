@@ -1,0 +1,24 @@
+.Profile {
+  max-width: 70%;
+  background: rgb(79, 131, 126);
+  padding: 3rem;
+  margin: auto;
+  margin-top: 2rem;
+  color: white;
+  border-radius: 10px;
+}
+.Profile p {
+  margin-bottom: 0.5rem;
+}
+.buttons {
+  margin-top: 1rem;
+}
+.buttons button {
+  margin-right: 10px;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none;
+  background: white;
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20" height="22" viewBox="0 0 20 22">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="0.981" y1="0.978" x2="0.225" y2="0.225" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#2f509c"/>
+      <stop offset="0.549" stop-color="#377aaf"/>
+      <stop offset="1" stop-color="#47d1d7"/>
+    </linearGradient>
+  </defs>
+  <g id="Icon-nav-bell-selected" transform="translate(-990.605 -539)">
+    <g id="bell-solid" transform="translate(987.555 537.225)">
+      <path id="Path_14" data-name="Path 14" class="cls-1" d="M23.05,19.538l-.228-.2a9.674,9.674,0,0,1-1.685-1.975,8.54,8.54,0,0,1-.906-3.242V10.789A7.275,7.275,0,0,0,13.9,3.544V2.675a.9.9,0,1,0-1.792,0v.883a7.276,7.276,0,0,0-6.262,7.232v3.329a8.54,8.54,0,0,1-.906,3.242,9.7,9.7,0,0,1-1.658,1.975l-.228.2v1.9h20Z" transform="translate(0 0)"/>
+      <path id="Path_15" data-name="Path 15" class="cls-1" d="M15.32,32a2.65,2.65,0,0,0,5.25,0Z" transform="translate(-4.898 -10.512)"/>
+    </g>
+  </g>
+</svg>
