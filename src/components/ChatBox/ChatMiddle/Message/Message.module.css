@@ -1,0 +1,23 @@
+.Message {
+  padding: 1rem;
+  background: white;
+  margin: 8px;
+  max-width: 30%;
+  border-radius: 10px;
+  border-bottom-left-radius: 0px;
+  word-break: break-word;
+}
+.Message span {
+  display: none;
+}
+.Own {
+  color: rgb(56, 55, 55);
+  align-self: flex-end;
+  text-align: right;
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 10px;
+}
+
+.Own span {
+  display: inline-block;
+}

@@ -1,0 +1,15 @@
+.ChatUser {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+.unread {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgb(122, 113, 29);
+  display: flex;
+  color: white;
+  align-items: flex-end;
+  justify-content: center;
+}

@@ -18,3 +18,15 @@ code {
   padding: 0;
   box-sizing: border-box;
 }
+html {
+  overflow: scroll;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar {
+  width: 4px;
+  background: rgb(157, 157, 158);
+}
+/* Optional: show position indicator in red */
+::-webkit-scrollbar-thumb {
+  background: #89dff5;
+}

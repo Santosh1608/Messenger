@@ -5,31 +5,24 @@ const chatSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: "User",
   },
-  messagesWith: {
-    friend: {
-      type: mongoose.Types.ObjectId,
-      ref: "User",
-    },
-    messages: [
-      {
-        message: {
-          type: String,
-          required: true,
-        },
-        sender: {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        receiver: {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        date: { type: Date, default: Date.now },
+  chats: [
+    {
+      messagesWith: {
+        type: mongoose.Types.ObjectId,
+        ref: "User",
       },
-    ],
-  },
+      messages: [
+        {
+          type: mongoose.Types.ObjectId,
+          ref: "Message",
+        },
+      ],
+      unread_count: {
+        type: Number,
+        default: 0,
+      },
+    },
+  ],
 });
 
 module.exports = mongoose.model("Chat", chatSchema);

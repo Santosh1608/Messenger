@@ -21,13 +21,16 @@ const {
   acceptRequest,
   ignoreRequest,
 } = require("./socketActions/followActions");
+const { sendMessage, setSeen } = require("./socketActions/messageActions");
 app.use(express.json());
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const notificationRoutes = require("./routes/notification");
+const chatRoutes = require("./routes/chat");
 app.use("/api", authRoutes);
 app.use("/api/", notificationRoutes);
 app.use("/api", userRoutes);
+app.use("/api", chatRoutes);
 
 // SOCKET STUFF
 io.use(function (socket, next) {
@@ -50,18 +53,22 @@ io.use(function (socket, next) {
   const userId = socket.user._id;
   const users = addUser(userId, socketId);
   io.emit("online", {
-    users: users.filter((user) => user.userId !== userId),
+    users,
   });
 
   // -------------FOLLOW REQUEST EVENT-------------------------
   socket.on("followRequest", async (followUserId) => {
+    console.log("request user", followUserId);
     const { error, data } = await followRequest(followUserId, userId);
     if (!error) {
+      console.log(data);
+      socket.emit("followRequestSent");
       const receiverSocket = findConnectedUser(followUserId);
       if (receiverSocket) {
         socket.to(receiverSocket.socketId).emit("NotificationReceived");
       }
     } else {
+      console.log(error);
       socket.emit("followRequestError");
     }
   });
@@ -69,8 +76,12 @@ io.use(function (socket, next) {
   // ------------ACCEPT REQUEST EVENT----------------------------
   socket.on("acceptRequest", async (requestedUserId) => {
     const { error, data } = await acceptRequest(requestedUserId, userId);
+    console.log(data, error);
+
     if (!error) {
       socket.emit("NotificationReceived");
+      socket.emit("acceptRequestSent");
+      console.log("SEND NOTIFICATION TO OTHER USER");
       const receiverSocket = findConnectedUser(requestedUserId);
       if (receiverSocket) {
         socket.to(receiverSocket.socketId).emit("NotificationReceived");
@@ -83,10 +94,40 @@ io.use(function (socket, next) {
   // ------------IGNORE REQUEST EVENT----------------------------
   socket.on("ignoreRequest", async (requestedUserId) => {
     const { error, data } = await ignoreRequest(requestedUserId, userId);
+    console.log(error, data);
     if (!error) {
       socket.emit("NotificationReceived");
+      socket.emit("ignoreRequestSent");
     } else {
       socket.emit("ignoreRequestError");
+    }
+  });
+
+  // -----------SEND MESSAGE EVENT-----------------------------------
+  socket.on("sendMessage", async ({ message, receiverId }) => {
+    console.log("sendMessage", message, receiverId);
+    const { error, data } = await sendMessage(receiverId, userId, message);
+    console.log(error, data);
+    if (!error) {
+      socket.emit("messageSent", data.senderMessage);
+      const receiverSocket = findConnectedUser(receiverId);
+      if (receiverSocket) {
+        socket
+          .to(receiverSocket.socketId)
+          .emit("messageReceived", data.receiverMessage);
+      }
+    }
+  });
+
+  // ------------SET SEEN FOR RECEIVER ID-------------------
+  socket.on("setSeen", async (receiverId) => {
+    const { error, data } = await setSeen(receiverId, userId);
+    console.log(error, data);
+    if (!error) {
+      const receiverSocket = findConnectedUser(receiverId);
+      if (receiverSocket) {
+        socket.to(receiverSocket.socketId).emit("receiveSeen", userId);
+      }
     }
   });
 
@@ -94,7 +135,7 @@ io.use(function (socket, next) {
   socket.on("disconnect", () => {
     const users = removeUser(socketId);
     io.emit("online", {
-      users: users.filter((user) => user.userId !== userId),
+      users,
     });
     console.log("client disconnected");
   });

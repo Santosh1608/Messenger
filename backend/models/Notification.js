@@ -21,7 +21,7 @@ const notificationSchema = new mongoose.Schema({
       },
       requestStatus: {
         type: String,
-        enum: ["pending,completed"],
+        enum: ["pending", "completed"],
       },
       seen: {
         type: Boolean,

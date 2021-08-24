@@ -1,11 +1,12 @@
 const { request } = require("express");
 const Follow = require("../models/Follow");
 const Notification = require("../models/Notification");
+const Chat = require("../models/Chat");
 const followRequest = async (followUserId, userId) => {
   console.log("request user");
   // CHECK IF ALREADY FRIENDS
   const user = await Follow.findOne({ user: userId });
-  const friends = user.friends.filter(friend === followUserId);
+  const friends = user.friends.find((friend) => friend == followUserId);
   if (friends) {
     return {
       data: null,
@@ -14,13 +15,23 @@ const followRequest = async (followUserId, userId) => {
   }
 
   // CHECK IF ALREADY REQUEST SENT
-  const pending = user.pending.filter(
-    (pendingId) => pendingId === followUserId
-  );
+  const pending = user.pending.find((pendingId) => pendingId == followUserId);
+  console.log(pending);
   if (pending) {
     return {
       data: null,
       error: "Already sent a follow request",
+    };
+  }
+
+  // CHECK U ALREADY GOT FRIEND REQUEST
+  const requestByuser = user.requests.find(
+    (requestId) => requestId == followUserId
+  );
+  if (requestByuser) {
+    return {
+      data: null,
+      error: "U already got a friend request",
     };
   } else {
     // ADD FOLLOW USER TO PENDING ARRAY
@@ -35,7 +46,7 @@ const followRequest = async (followUserId, userId) => {
     // SET NOTIFICATION TO FOLLOW USER
     const NotificationUser = await Notification.findOne({ user: followUserId });
 
-    NotificationUser.notifications.push({
+    NotificationUser.notifications.unshift({
       type: "request",
       user: userId,
       requestStatus: "pending",
@@ -52,7 +63,7 @@ const acceptRequest = async (requestedUserId, userId) => {
   console.log("accept Request");
   // CHECK IF ALREADY FRIENDS
   const user = await Follow.findOne({ user: userId });
-  const friends = user.friends.find(friend === followUserId);
+  const friends = user.friends.find((friend) => friend == requestedUserId);
   if (friends) {
     return {
       data: null,
@@ -62,9 +73,9 @@ const acceptRequest = async (requestedUserId, userId) => {
 
   // CHECK IF REQUESTED USER IN REQUEST ARRAY
   const requested = user.requests.findIndex(
-    (requestedId) => requestedId === requestedUserId
+    (requestedId) => requestedId == requestedUserId
   );
-  if (requested === -1) {
+  if (requested == -1) {
     return {
       data: null,
       error: "U can't accept not request people",
@@ -75,23 +86,30 @@ const acceptRequest = async (requestedUserId, userId) => {
 
     // ADD REQUESTED USER TO FRIENDS LIST
     user.friends.push(requestedUserId);
+    // ADD REQUESTED USER TO CHAT
+    const userChat = await Chat.findOne({ user: userId });
+    userChat.chats.push({
+      messagesWith: requestedUserId,
+      messages: [],
+    });
+    userChat.save();
 
     await user.save();
     // CHANGE REQUEST STATUS TO COMPLETED FOR USER NOTIFICATION
     const userNotification = await Notification.findOne({ user: userId });
     const notificationIndex = userNotification.notifications.findIndex(
       (notification) =>
-        notification.user === requestedUserId &&
-        type === "request" &&
-        requestStatus === "pending"
+        notification.user == requestedUserId &&
+        notification.type == "request" &&
+        notification.requestStatus == "pending"
     );
-    if (notificationIndex !== -1) {
+    if (notificationIndex != -1) {
       userNotification.notifications[notificationIndex].requestStatus =
         "completed";
     }
 
     // SET NOTIFICATION FOR USER
-    userNotification.notifications.push({
+    userNotification.notifications.unshift({
       type: "accept",
       user: requestedUserId,
     });
@@ -101,7 +119,7 @@ const acceptRequest = async (requestedUserId, userId) => {
     const requestedUserNotification = await Notification.findOne({
       user: requestedUserId,
     });
-    requestedUserNotification.notifications.push({
+    requestedUserNotification.notifications.unshift({
       type: "accepted",
       user: userId,
     });
@@ -110,16 +128,23 @@ const acceptRequest = async (requestedUserId, userId) => {
     // REMOVE USER FROM PENDING ARRAY
     const requestedUser = await Follow.findOne({ user: requestedUserId });
     const pendingUserIndex = requestedUser.pending.findIndex(
-      (pendingId) => pendingId === userId
+      (pendingId) => pendingId == userId
     );
-    if (pendingUserIndex !== -1) {
+    if (pendingUserIndex != -1) {
       requestedUser.pending.splice(pendingUserIndex, 1);
     }
 
     // ADD USER TO FRIENDS LIST
     requestedUser.friends.push(userId);
-
+    // ADD USER TO OTHER CHAT
+    const requestedUserChat = await Chat.findOne({ user: requestedUserId });
+    requestedUserChat.chats.push({
+      messagesWith: userId,
+      messages: [],
+    });
+    requestedUserChat.save();
     await requestedUser.save();
+    console.log("_+_+_+_+_+__+++_+_+_+");
     return {
       data: "request accepted",
       error: null,
@@ -130,19 +155,12 @@ const acceptRequest = async (requestedUserId, userId) => {
 const ignoreRequest = async (requestedUserId, userId) => {
   // CHECK IF PRIVIOUSLY NOT FRIENDS
   const user = await Follow.findOne({ user: userId });
-  const friends = user.friends.find(friend === followUserId);
-  if (!friends) {
-    return {
-      data: null,
-      error: "You are not friends",
-    };
-  }
 
   // CHECK IF REQUESTED USER IN REQUEST ARRAY
   const requested = user.requests.findIndex(
-    (requestedId) => requestedId === requestedUserId
+    (requestedId) => requestedId == requestedUserId
   );
-  if (requested === -1) {
+  if (requested == -1) {
     return {
       data: null,
       error: "U can't ignore not requested people",
@@ -150,16 +168,17 @@ const ignoreRequest = async (requestedUserId, userId) => {
   } else {
     // REMOVE REQUESTED USER FROM REQUESTS ARRAY
     user.requests.splice(requested, 1);
+    await user.save();
 
     // CHANGE REQUEST STATUS TO COMPLETED FOR USER NOTIFICATION
     const userNotification = await Notification.findOne({ user: userId });
     const notificationIndex = userNotification.notifications.findIndex(
       (notification) =>
-        notification.user === requestedUserId &&
-        type === "request" &&
-        requestStatus === "pending"
+        notification.user == requestedUserId &&
+        notification.type == "request" &&
+        notification.requestStatus == "pending"
     );
-    if (notificationIndex !== -1) {
+    if (notificationIndex != -1) {
       userNotification.notifications[notificationIndex].requestStatus =
         "completed";
     }
@@ -168,9 +187,9 @@ const ignoreRequest = async (requestedUserId, userId) => {
     // REMOVE USER FROM PENDING ARRAY
     const requestedUser = await Follow.findOne({ user: requestedUserId });
     const pendingUserIndex = requestedUser.pending.findIndex(
-      (pendingId) => pendingId === userId
+      (pendingId) => pendingId == userId
     );
-    if (pendingUserIndex !== -1) {
+    if (pendingUserIndex != -1) {
       requestedUser.pending.splice(pendingUserIndex, 1);
     }
     await requestedUser.save();

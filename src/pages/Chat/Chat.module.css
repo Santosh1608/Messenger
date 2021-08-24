@@ -1,0 +1,13 @@
+.ChatUsers {
+  background: rgb(139, 218, 214);
+  width: 200px;
+  overflow-y: scroll;
+}
+.WrapChat {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+.ChatBox {
+  background: rgb(235, 231, 231);
+  flex: 1;
+}
